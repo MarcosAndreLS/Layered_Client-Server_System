@@ -1,11 +1,10 @@
 """Arquivos main.py do client"""
-# client.py
 import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 import requests
 from PIL import Image, ImageTk
-import io
-import os
+# import io
+# import os
 
 class ImageProcessorClient:
     def __init__(self, root):

@@ -9,12 +9,11 @@ from datetime import datetime
 app = Flask(__name__)
 UPLOAD_FOLDER = '../images/uploads'
 PROCESSED_FOLDER = '../images/processed'
-DATABASE = 'images.db'
+DATABASE = '../database/images.db'
 
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(PROCESSED_FOLDER, exist_ok=True)
 
-# Inicialização do banco de dados
 def init_db():
     conn = sqlite3.connect(DATABASE)
     c = conn.cursor()
