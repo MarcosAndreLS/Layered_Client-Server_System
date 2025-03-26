@@ -76,6 +76,8 @@ def upload_file():
     if file and allowed_file(file.filename):
         # Salva a imagem original
         filename = secure_filename(file.filename)
+        name, ext = os.path.splitext(filename) 
+
         original_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(original_path)
         
@@ -85,7 +87,7 @@ def upload_file():
             processed_img = apply_filter(img, filter_type)
             
             # Salva a imagem processada
-            processed_filename = f"processed_{filename}"
+            processed_filename = f"{name}_{filter_type}{ext}"
             processed_path = os.path.join(PROCESSED_FOLDER, processed_filename)
             processed_img.save(processed_path)
             
@@ -143,4 +145,4 @@ def get_images():
     return jsonify(images)
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    app.run(host='0.0.0.0',debug=True, port=5000)
