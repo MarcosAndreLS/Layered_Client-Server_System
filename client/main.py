@@ -12,7 +12,7 @@ class ImageProcessorClient:
         self.root.title("Processador de Imagens")
         
         # Variáveis
-        self.server_url = "http://127.0.0.1:5000"
+        self.server_url = "http://26.212.178.226:5000"
         self.api_key = "SECRET_KEY_123"
         self.selected_file = None
         self.original_image = None

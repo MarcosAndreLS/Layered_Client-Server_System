@@ -143,4 +143,4 @@ def get_images():
     return jsonify(images)
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    app.run(host='26.212.178.226',debug=True, port=5000)
