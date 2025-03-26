@@ -101,7 +101,7 @@ class ImageProcessorClient:
             else:
                 self.processed_image = img
         except Exception as e:
-            messagebox.showerror("Erro", f"Não foi possível carregar a imagem: {e}") # erro aqui
+            messagebox.showerror("Erro", f"Não foi possível carregar a imagem: sfdsfsssdfs") # erro aqui
     
     def process_image(self):
         if not self.selected_file:
@@ -130,8 +130,6 @@ class ImageProcessorClient:
                 
                 result = response.json()
 
-                self.display_image(result['processed'], self.processed_panel)
-
                 processed_url = f"{self.server_url}{result['processed']}"
                 processed_response = requests.get(processed_url, headers=headers)
                 processed_response.raise_for_status()
@@ -145,8 +143,6 @@ class ImageProcessorClient:
                 os.remove(temp_path)  # Remove após exibir
                 
                 messagebox.showinfo("Sucesso", f"Imagem processada com filtro: {result['filter']}")
-        # except requests.exceptions.RequestException as e:
-        #     messagebox.showerror("Erro", f"Falha na comunicação com o servidor: {e}") # erro aqui
         except Exception as e:
             messagebox.showerror("Erro", f"Falha ao processar imagem: {e}")
     
@@ -240,52 +236,7 @@ class ImageProcessorClient:
                 processed_panel.image = processed_photo
                 processed_panel.pack()
             
-            tk.Button(history_window, text="Visualizar Selecionado", command=view_selected).pack(pady=5)
-        #         selected = tree.focus()
-        #         if not selected:
-        #             return
-                
-        #         item = tree.item(selected)
-        #         item_id = item['values'][0]
-                
-        #         # Busca detalhes completos do item
-        #         detail_response = requests.get(
-        #             f"{self.server_url}/images",
-        #             headers=headers
-        #         )
-        #         detail_response.raise_for_status()
-                
-        #         full_history = detail_response.json()
-        #         selected_item = next((x for x in full_history if x['id'] == item_id), None)
-                
-        #         if not selected_item:
-        #             messagebox.showerror("Erro", "Não foi possível encontrar os detalhes da imagem")
-        #             return
-                
-        #         view_window = tk.Toplevel(history_window)
-        #         view_window.title(f"Visualizar - {item['values'][1]}")
-                
-        #         # Mostrar original
-        #         original_label = tk.Label(view_window, text="Original")
-        #         original_label.pack()
-        #         original_img = ImageTk.PhotoImage(Image.open(original_img))
-        #         original_panel = tk.Label(view_window, image=original_img)
-        #         original_panel.image = original_img
-        #         original_panel.pack()
-                
-        #         # Mostrar processada
-        #         processed_label = tk.Label(view_window, text="Processada")
-        #         processed_label.pack()
-        #         processed_img = ImageTk.PhotoImage(Image.open(processed_img))
-        #         processed_panel = tk.Label(view_window, image=processed_img)
-        #         processed_panel.image = processed_img
-        #         processed_panel.pack()
-            
-        #     tk.Button(history_window, text="Visualizar Selecionado", command=view_selected).pack(pady=5)
-            
-        # except requests.exceptions.RequestException as e:
-        #     messagebox.showerror("Erro", f"Falha ao carregar histórico: {e}")
-            
+            tk.Button(history_window, text="Visualizar Selecionado", command=view_selected).pack(pady=5)     
         except requests.exceptions.RequestException as e:
             messagebox.showerror("Erro", f"Falha ao carregar histórico: {e}")
 
