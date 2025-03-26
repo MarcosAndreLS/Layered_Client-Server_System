@@ -208,37 +208,22 @@ class ImageProcessorClient:
                     return
                 
                 view_window = tk.Toplevel(history_window)
-                view_window.title(f"Visualizar - {selected_item['filename']}")
+                view_window.title(f"Visualizar - {item['values'][1]}")
                 
-                # Baixa e exibe a imagem original
-                original_response = requests.get(
-                    f"{self.server_url}/image/{selected_item['original_path']}",
-                    headers=headers
-                )
-                original_img = Image.open(io.BytesIO(original_response.content))
-                original_img.thumbnail((300, 300))
-                original_photo = ImageTk.PhotoImage(original_img)
-                
+                # Mostrar original
                 original_label = tk.Label(view_window, text="Original")
                 original_label.pack()
-                original_panel = tk.Label(view_window, image=original_photo)
-                original_panel.image = original_photo
+                original_img = ImageTk.PhotoImage(Image.open(original_path))
+                original_panel = tk.Label(view_window, image=original_img)
+                original_panel.image = original_img
                 original_panel.pack()
                 
-                # Baixa e exibe a imagem processada
-                processed_response = requests.get(
-                    f"{self.server_url}/image/{selected_item['processed_path']}",
-                    headers=headers
-                )
-
-                processed_img = Image.open(io.BytesIO(processed_response.content))
-                processed_img.thumbnail((300, 300))
-                processed_photo = ImageTk.PhotoImage(processed_img)
-                
+                # Mostrar processada
                 processed_label = tk.Label(view_window, text="Processada")
                 processed_label.pack()
-                processed_panel = tk.Label(view_window, image=processed_photo)
-                processed_panel.image = processed_photo
+                processed_img = ImageTk.PhotoImage(Image.open(processed_path))
+                processed_panel = tk.Label(view_window, image=processed_img)
+                processed_panel.image = processed_img
                 processed_panel.pack()
             
             tk.Button(history_window, text="Visualizar Selecionado", command=view_selected).pack(pady=5)
