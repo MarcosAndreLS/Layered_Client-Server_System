@@ -213,7 +213,7 @@ class ImageProcessorClient:
                 # Mostrar original
                 original_label = tk.Label(view_window, text="Original")
                 original_label.pack()
-                original_img = ImageTk.PhotoImage(Image.open(original_path))
+                original_img = ImageTk.PhotoImage(Image.open(original_img))
                 original_panel = tk.Label(view_window, image=original_img)
                 original_panel.image = original_img
                 original_panel.pack()
@@ -221,7 +221,7 @@ class ImageProcessorClient:
                 # Mostrar processada
                 processed_label = tk.Label(view_window, text="Processada")
                 processed_label.pack()
-                processed_img = ImageTk.PhotoImage(Image.open(processed_path))
+                processed_img = ImageTk.PhotoImage(Image.open(processed_img))
                 processed_panel = tk.Label(view_window, image=processed_img)
                 processed_panel.image = processed_img
                 processed_panel.pack()
