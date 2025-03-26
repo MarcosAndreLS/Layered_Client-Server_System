@@ -3,8 +3,8 @@ import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 import requests
 from PIL import Image, ImageTk
-# import io
-# import os
+import os
+import io
 
 class ImageProcessorClient:
     def __init__(self, root):
@@ -12,13 +12,28 @@ class ImageProcessorClient:
         self.root.title("Processador de Imagens")
         
         # Variáveis
-        self.server_url = "http://localhost:5000"
+        self.server_url = "http://127.0.0.1:5000"
+        self.api_key = "SECRET_KEY_123"
         self.selected_file = None
         self.original_image = None
         self.processed_image = None
         
+        if not self.check_connection():
+            messagebox.showerror("Erro", "Não foi possível conectar ao servidor. Verifique o endereço e a rede.")
+            root.destroy()
+            return
+        
         # Interface
         self.create_widgets()
+    
+    def check_connection(self):
+        try:
+            response = requests.get(f"{self.server_url}/images", 
+                                   headers={'Authorization': f'Bearer {self.api_key}'},
+                                   timeout=5)
+            return response.status_code == 200
+        except (requests.ConnectionError, requests.Timeout):
+            return False
     
     def create_widgets(self):
         # Frame principal
@@ -86,7 +101,7 @@ class ImageProcessorClient:
             else:
                 self.processed_image = img
         except Exception as e:
-            messagebox.showerror("Erro", f"Não foi possível carregar a imagem: {e}")
+            messagebox.showerror("Erro", f"Não foi possível carregar a imagem: {e}") # erro aqui
     
     def process_image(self):
         if not self.selected_file:
@@ -94,22 +109,56 @@ class ImageProcessorClient:
             return
         
         try:
-            files = {'file': open(self.selected_file, 'rb')}
-            data = {'filter': self.filter_var.get()}
-            
-            response = requests.post(f"{self.server_url}/upload", files=files, data=data)
-            response.raise_for_status()
-            
-            result = response.json()
-            self.display_image(result['processed'], self.processed_panel)
-            
-            messagebox.showinfo("Sucesso", f"Imagem processada com filtro: {result['filter']}")
+            with open(self.selected_file, 'rb') as f:
+                files = {'file': f}
+                data = {'filter': self.filter_var.get()}
+                
+                headers = {'Authorization': f'Bearer {self.api_key}'}
+
+                response = requests.post(
+                    f"{self.server_url}/upload", files=files,
+                    data=data,
+                    headers=headers,
+                    timeout=10
+                )
+
+                if response.status_code == 401:
+                    messagebox.showerror("Erro", "Acesso não autorizado. Verifique a chave de API.")
+                    return
+                
+                response.raise_for_status()
+                
+                result = response.json()
+
+                self.display_image(result['processed'], self.processed_panel)
+
+                processed_url = f"{self.server_url}{result['processed']}"
+                processed_response = requests.get(processed_url, headers=headers)
+                processed_response.raise_for_status()
+                
+                # Salva temporariamente para exibição
+                temp_path = "temp_processed.jpg"
+                with open(temp_path, 'wb') as f:
+                    f.write(processed_response.content)
+                
+                self.display_image(temp_path, self.processed_panel)
+                os.remove(temp_path)  # Remove após exibir
+                
+                messagebox.showinfo("Sucesso", f"Imagem processada com filtro: {result['filter']}")
+        # except requests.exceptions.RequestException as e:
+        #     messagebox.showerror("Erro", f"Falha na comunicação com o servidor: {e}") # erro aqui
         except Exception as e:
             messagebox.showerror("Erro", f"Falha ao processar imagem: {e}")
     
     def show_history(self):
         try:
-            response = requests.get(f"{self.server_url}/images")
+            headers = {'Authorization': f'Bearer {self.api_key}'}
+            response = requests.get(f"{self.server_url}/images", headers=headers, timeout=5)
+            
+            if response.status_code == 401:
+                messagebox.showerror("Erro", "Acesso não autorizado. Verifique a chave de API.")
+                return
+            
             response.raise_for_status()
             
             history = response.json()
@@ -142,34 +191,65 @@ class ImageProcessorClient:
                     return
                 
                 item = tree.item(selected)
-                original_path = next(x for x in history if x['id'] == item['values'][0])['original_path']
-                processed_path = next(x for x in history if x['id'] == item['values'][0])['processed_path']
+                item_id = item['values'][0]
+                
+                # Busca detalhes completos do item
+                detail_response = requests.get(
+                    f"{self.server_url}/images",
+                    headers=headers
+                )
+                detail_response.raise_for_status()
+                
+                full_history = detail_response.json()
+                selected_item = next((x for x in full_history if x['id'] == item_id), None)
+                
+                if not selected_item:
+                    messagebox.showerror("Erro", "Não foi possível encontrar os detalhes da imagem")
+                    return
                 
                 view_window = tk.Toplevel(history_window)
-                view_window.title(f"Visualizar - {item['values'][1]}")
+                view_window.title(f"Visualizar - {selected_item['filename']}")
                 
-                # Mostrar original
+                # Baixa e exibe a imagem original
+                original_response = requests.get(
+                    f"{self.server_url}/image/{selected_item['original_path']}",
+                    headers=headers
+                )
+                original_img = Image.open(io.BytesIO(original_response.content))
+                original_img.thumbnail((300, 300))
+                original_photo = ImageTk.PhotoImage(original_img)
+                
                 original_label = tk.Label(view_window, text="Original")
                 original_label.pack()
-                original_img = ImageTk.PhotoImage(Image.open(original_path))
-                original_panel = tk.Label(view_window, image=original_img)
-                original_panel.image = original_img
+                original_panel = tk.Label(view_window, image=original_photo)
+                original_panel.image = original_photo
                 original_panel.pack()
                 
-                # Mostrar processada
+                # Baixa e exibe a imagem processada
+                processed_response = requests.get(
+                    f"{self.server_url}/image/{selected_item['processed_path']}",
+                    headers=headers
+                )
+
+                processed_img = Image.open(io.BytesIO(processed_response.content))
+                processed_img.thumbnail((300, 300))
+                processed_photo = ImageTk.PhotoImage(processed_img)
+                
                 processed_label = tk.Label(view_window, text="Processada")
                 processed_label.pack()
-                processed_img = ImageTk.PhotoImage(Image.open(processed_path))
-                processed_panel = tk.Label(view_window, image=processed_img)
-                processed_panel.image = processed_img
+                processed_panel = tk.Label(view_window, image=processed_photo)
+                processed_panel.image = processed_photo
                 processed_panel.pack()
             
             tk.Button(history_window, text="Visualizar Selecionado", command=view_selected).pack(pady=5)
             
-        except Exception as e:
+        except requests.exceptions.RequestException as e:
             messagebox.showerror("Erro", f"Falha ao carregar histórico: {e}")
 
 if __name__ == "__main__":
     root = tk.Tk()
-    app = ImageProcessorClient(root)
-    root.mainloop()
+    try:
+        app = ImageProcessorClient(root)
+        root.mainloop()
+    except Exception as e:
+        messagebox.showerror("Erro Inesperado", f"O aplicativo encontrou um erro: {e}")

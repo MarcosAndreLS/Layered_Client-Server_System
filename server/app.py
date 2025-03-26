@@ -5,11 +5,17 @@ from PIL import Image, ImageFilter
 import sqlite3
 import os
 from datetime import datetime
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
-UPLOAD_FOLDER = '../images/uploads'
-PROCESSED_FOLDER = '../images/processed'
-DATABASE = '../database/images.db'
+UPLOAD_FOLDER = 'uploads'
+PROCESSED_FOLDER = 'processed'
+DATABASE = 'images.db'
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'bmp'}
+API_KEY = 'SECRET_KEY_123'
+
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['MAX_CONTENT_LENGTH'] = 8 * 1024 * 1024
 
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(PROCESSED_FOLDER, exist_ok=True)
@@ -29,6 +35,15 @@ def init_db():
 
 init_db()
 
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def authenticate():
+    auth_header = request.headers.get('Authorization')
+    if not auth_header or auth_header != f'Bearer {API_KEY}':
+        return False
+    return True
+
 def apply_filter(image, filter_type):
     """Aplica filtro na imagem conforme solicitado"""
     if filter_type == 'pixelate':
@@ -46,49 +61,68 @@ def apply_filter(image, filter_type):
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
+    if not authenticate():
+        return jsonify({"error": "Sem autorização"}), 401
+
     if 'file' not in request.files:
-        return jsonify({'error': 'No file part'}), 400
+        return jsonify({'error': 'Nenhuma parte do arquivo'}), 400
     
     file = request.files['file']
     filter_type = request.form.get('filter', 'pixelate')
     
     if file.filename == '':
-        return jsonify({'error': 'No selected file'}), 400
+        return jsonify({'error': 'Arquivo não selecionado'}), 400
     
-    if file:
+    if file and allowed_file(file.filename):
         # Salva a imagem original
-        original_path = os.path.join(UPLOAD_FOLDER, file.filename)
+        filename = secure_filename(file.filename)
+        original_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(original_path)
         
         # Abre a imagem e aplica o filtro
-        img = Image.open(original_path)
-        processed_img = apply_filter(img, filter_type)
-        
-        # Salva a imagem processada
-        processed_filename = f"processed_{file.filename}"
-        processed_path = os.path.join(PROCESSED_FOLDER, processed_filename)
-        processed_img.save(processed_path)
-        
-        # Salva metadados no banco de dados
-        conn = sqlite3.connect(DATABASE)
-        c = conn.cursor()
-        c.execute("INSERT INTO images (filename, filter_type, original_path, processed_path, created_at) VALUES (?, ?, ?, ?, ?)",
-                  (file.filename, filter_type, original_path, processed_path, datetime.now()))
-        conn.commit()
-        conn.close()
-        
-        return jsonify({
-            'original': original_path,
-            'processed': processed_path,
-            'filter': filter_type
-        })
+        try:
+            img = Image.open(original_path)
+            processed_img = apply_filter(img, filter_type)
+            
+            # Salva a imagem processada
+            processed_filename = f"processed_{filename}"
+            processed_path = os.path.join(PROCESSED_FOLDER, processed_filename)
+            processed_img.save(processed_path)
+            
+            # Salva metadados no banco de dados
+            conn = sqlite3.connect(DATABASE)
+            c = conn.cursor()
+            c.execute("INSERT INTO images (filename, filter_type, original_path, processed_path, created_at) VALUES (?, ?, ?, ?, ?)",
+                    (filename, filter_type, original_path, processed_path, datetime.now()))
+            conn.commit()
+            conn.close()
+            
+            return jsonify({
+                'status': 'success',
+                'original': f"/image/{original_path}",
+                'processed': f"/image/{processed_path}",
+                'filter': filter_type
+            })
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+    else:
+        return jsonify({'error': 'Tipo de arquivo não permitido'}), 400
 
 @app.route('/image/<path:filename>')
 def get_image(filename):
-    return send_file(filename)
+    if not authenticate():
+        return jsonify({'error': 'Não autorizado'})
+    
+    try:
+        return send_file(filename)
+    except FileNotFoundError:
+        return jsonify({'error': 'Imagem não encontrada'})
 
 @app.route('/images')
 def get_images():
+    if not authenticate():
+        return jsonify({'error': 'Não autorizado'})
+    
     conn = sqlite3.connect(DATABASE)
     c = conn.cursor()
     c.execute("SELECT * FROM images ORDER BY created_at DESC")
