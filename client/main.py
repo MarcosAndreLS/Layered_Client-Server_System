@@ -148,18 +148,23 @@ class ImageProcessorClient:
                 view_window = tk.Toplevel(history_window)
                 view_window.title(f"Visualizar - {item['values'][1]}")
                 
+                def resize_image(image_path, max_size=(350, 350)):  # Define um tamanho máximo
+                    img = Image.open(image_path)
+                    img.thumbnail(max_size)  # Mantém proporção e reduz para caber no tamanho máximo
+                    return ImageTk.PhotoImage(img)
+
                 # Mostrar original
                 original_label = tk.Label(view_window, text="Original")
                 original_label.pack()
-                original_img = ImageTk.PhotoImage(Image.open(original_path))
+                original_img = resize_image(original_path)
                 original_panel = tk.Label(view_window, image=original_img)
                 original_panel.image = original_img
                 original_panel.pack()
-                
+
                 # Mostrar processada
                 processed_label = tk.Label(view_window, text="Processada")
                 processed_label.pack()
-                processed_img = ImageTk.PhotoImage(Image.open(processed_path))
+                processed_img = resize_image(processed_path)
                 processed_panel = tk.Label(view_window, image=processed_img)
                 processed_panel.image = processed_img
                 processed_panel.pack()
