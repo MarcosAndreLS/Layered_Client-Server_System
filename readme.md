@@ -55,17 +55,44 @@ pip install -r requirements.txt
 
 ```bash
 Layered_Client-Server_System/
-    |--- client/
-    |       |--- main.py
-    |--- database/
-    |       |--- imagens.db
-    |--- images/
-    |       |--- processed/
-    |       |--- uploads/
-    |--- server/
-    |       |--- app.py
-    |--- README.md
-    |--- requirements.txt
+│
+└── client/
+│    │
+│    ├── api/
+│    │   ├── __init__.py
+│    │   └── image_api.py       # Comunicação com a API do servidor
+│    ├── utils/
+│    │   ├── __init__.py
+│    │   ├── file_utils.py      # Manipulação de arquivos
+│    │   └── image_utils.py     # Manipulação de imagens
+│    ├── gui/
+│    │   ├── __init__.py
+│    │   ├── components.py      # Componentes da interface
+│    │   ├── history_window.py  # Janela de histórico
+│    │   └── main_window.py     # Janela principal
+│    └── app.py                 # Classe principal da aplicação
+│    └── config.py              # Configurações do cliente
+│    └── main.py                # Ponto de entrada principal
+│
+└── server/
+│    │
+│    ├── database/
+│    │   ├── __init__.py
+│    │   ├── db.py              # Funções relacionadas ao banco de dados
+│    │   └── models.py          # Modelos de dados
+│    ├── utils/
+│    │   ├── __init__.py
+│    │   ├── auth.py            # Autenticação
+│    │   ├── file_handling.py   # Manipulação de arquivos
+│    │   └── image_processing.py # Processamento de imagens
+│    └── routes/
+│    │    ├── __init__.py
+│    │    ├── images.py          # Rotas relacionadas a imagens
+│    │    └── api.py             # Outras rotas da API
+│    ├── app.py                 # Ponto de entrada principal
+│    └── config.py              # Configurações do aplicativo
+└── README.md
+└── requirements.txt
 ```
 
 ## Executando o projeto
