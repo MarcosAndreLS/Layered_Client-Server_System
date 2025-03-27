@@ -91,16 +91,16 @@ python main.py
         <img src="https://github.com/user-attachments/assets/38cc4af0-2ce1-485b-ad6b-320b9f4a30a5"/>
     </p>
     
-2. Tela do Histórico
+2. Tela inicial com imagem original e processada lado a lado
+
+   <p align="center">
+        <img src="https://github.com/user-attachments/assets/ee307b09-cbb8-49e2-b761-03c58c621f2c"/>
+   </p>
+
+3. Tela do Histórico
    
    Na tela do histórico é possível selecionar uma imagem ao qual já foi processada, sendo possível visualizar a original e a processada.
    
    <p align="center">
        <img src="https://github.com/user-attachments/assets/ee705698-144d-4103-895f-dfb2502eecc8"/>
-   </p>
-
-3. Tela inicial com imagem original e processada lado a lado
-
-   <p align="center">
-        <img src="https://github.com/user-attachments/assets/ee307b09-cbb8-49e2-b761-03c58c621f2c"/>
    </p>
