@@ -1,7 +1,7 @@
 from PIL import Image, ImageFilter
 
 def apply_filter(image, filter_type):
-    """Aplica filtro na imagem conforme solicitado"""
+    """Aplica filtro na imagem"""
     if filter_type == 'pixelate':
         small = image.resize((32, 32), resample=Image.BILINEAR)
         return small.resize(image.size, Image.NEAREST)
